@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тренажёр по математике</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f1f5f9;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 24px 28px 28px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
+      max-width: 480px;
+      width: 100%;
+    }
+
+    h1 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    .subtitle {
+      margin: 0 0 12px;
+      font-size: 14px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    .date {
+      margin: 0 0 16px;
+      font-size: 15px;
+      color: #0f172a;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5f5;
+      font-size: 14px;
+      outline: none;
+    }
+
+    select:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59,130,246,0.25);
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .problem {
+      flex: 1 1 100%;
+      font-size: 26px;
+      font-weight: 600;
+      text-align: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: #1e293b;
+    }
+
+    .options {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .option-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 12px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      background: #e2e8f0;
+      color: #0f172a;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+      transition: 0.15s;
+    }
+
+    .option-btn:hover { background: #cbd5e1; }
+    .option-btn:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .status {
+      margin-top: 14px;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .status.ok { color: #16a34a; }
+    .status.error { color: #dc2626; }
+
+    .stats {
+      margin-top: 16px;
+      padding-top: 10px;
+      border-top: 1px dashed #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-secondary {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    .btn-secondary:hover { background: #cbd5e1; }
+    .btn-secondary:active { transform: translateY(1px); }
+
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тренажёр по математике</h1>
+  <p class="subtitle">Выбери режим и нажимай на правильный ответ.</p>
+
+  <!-- 📌 Автоматическая дата -->
+  <p class="date" id="currentDate"></p>
+
+  <div>
+    <label for="mode">Режим</label>
+    <select id="mode">
+      <option value="simple-mul">Таблица умножения 1–9</option>
+      <option value="advanced-mul">Умножение с двузначными числами</option>
+      <option value="add-sub">Сложение и вычитание (2–3 цифры)</option>
+    </select>
+  </div>
+
+  <div class="row">
+    <div class="problem" id="problem">—</div>
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <div class="controls">
+    <button class="btn-secondary" id="newBtn">Новый пример</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="stats">
+    <div>Верно: <span id="correct">0</span></div>
+    <div>Всего: <span id="total">0</span></div>
+    <div>Точность: <span id="accuracy">0%</span></div>
+  </div>
+</div>
+
+<script>
+  // 📌 Отображение текущей даты
+  function updateDate() {
+    const dateEl = document.getElementById('currentDate');
+    const now = new Date();
+
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+
+    dateEl.textContent = `Дата: ${day}.${month}.${year}`;
+  }
+
+  updateDate();
+
+  const modeSelect = document.getElementById('mode');
+  const problemEl = document.getElementById('problem');
+  const statusEl = document.getElementById('status');
+  const correctEl = document.getElementById('correct');
+  const totalEl = document.getElementById('total');
+  const accuracyEl = document.getElementById('accuracy');
+  const newBtn = document.getElementById('newBtn');
+  const optionsContainer = document.getElementById('options');
+
+  let currentAnswer = null;
+  let currentExpression = '';
+  let correctCount = 0;
+  let totalCount = 0;
+  let lock = false;
+
+  function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function generateSimpleMultiplication() {
+    const a = getRandomInt(1, 9);
+    const b = getRandomInt(1, 9);
+    currentAnswer = a * b;
+    currentExpression = `${a} × ${b}`;
+  }
+
+  function generateAdvancedMultiplication() {
+    const variant = Math.random() < 0.5 ? 0 : 1;
+    if (variant === 0) {
+      const a = getRandomInt(10, 99);
+      const b = getRandomInt(1, 9);
+      currentAnswer = a * b;
+      currentExpression = `${a} × ${b}`;
+    } else {
+      const a = getRandomInt(10, 99);
+      const b = getRandomInt(10, 99);
+      currentAnswer = a * b;
+      currentExpression = `${a} × ${b}`;
+    }
+  }
+
+  function generateAddSub() {
+    const digitsOptions = [2, 3];
+    const digitsA = digitsOptions[getRandomInt(0, 1)];
+    const digitsB = digitsOptions[getRandomInt(0, 1)];
+
+    const minA = digitsA === 2 ? 10 : 100;
+    const maxA = digitsA === 2 ? 99 : 999;
+    const minB = digitsB === 2 ? 10 : 100;
+    const maxB = digitsB === 2 ? 99 : 999;
+
+    let a = getRandomInt(minA, maxA);
+    let b = getRandomInt(minB, maxB);
+
+    let op = Math.random() < 0.5 ? '+' : '-';
+
+    if (op === '-' && b > a) {
+      const temp = a; a = b; b = temp;
+    }
+
+    currentExpression = `${a} ${op} ${b}`;
+    currentAnswer = op === '+' ? a + b : a - b;
+  }
+
+  function generateProblem() {
+    lock = false;
+    statusEl.textContent = '';
+    statusEl.className = 'status';
+
+    const mode = modeSelect.value;
+    if (mode === 'simple-mul') generateSimpleMultiplication();
+    else if (mode === 'advanced-mul') generateAdvancedMultiplication();
+    else generateAddSub();
+
+    problemEl.textContent = currentExpression;
+    generateOptions();
+  }
+
+  function generateOptions() {
+    optionsContainer.innerHTML = '';
+    const options = new Set();
+    options.add(currentAnswer);
+
+    while (options.size < 4) {
+      const delta = getRandomInt(1, Math.max(3, Math.round(Math.abs(currentAnswer) * 0.1) || 1));
+      const wrong = currentAnswer + (Math.random() < 0.5 ? -delta : delta);
+      if (wrong !== currentAnswer && wrong >= 0) options.add(wrong);
+    }
+
+    shuffleArray([...options]).forEach(val => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.textContent = val;
+      btn.onclick = () => handleAnswer(val);
+      optionsContainer.appendChild(btn);
+    });
+  }
+
+  function handleAnswer(val) {
+    if (lock) return;
+    lock = true;
+
+    totalCount++;
+    if (val === currentAnswer) {
+      correctCount++;
+      statusEl.textContent = 'Верно! 👍';
+      statusEl.className = 'status ok';
+    } else {
+      statusEl.textContent = `Неверно. Правильный ответ: ${currentAnswer}`;
+      statusEl.className = 'status error';
+    }
+
+    correctEl.textContent = correctCount;
+    totalEl.textContent = totalCount;
+    accuracyEl.textContent = Math.round((correctCount / totalCount) * 100) + '%';
+
+    setTimeout(generateProblem, 800);
+  }
+
+  newBtn.onclick = generateProblem;
+  modeSelect.onchange = generateProblem;
+
+  window.onload = generateProblem;
+</script>
+</body>
+</html>
